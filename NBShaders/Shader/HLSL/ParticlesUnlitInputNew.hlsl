@@ -740,9 +740,13 @@
             }
             
             float2 UVAfterTwirlPolar = defaultUVChannel;
+            if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_POLARCOORDINATES_SCREENUV_ON))
+            {
+                UVAfterTwirlPolar = screenUV;
+            }
             if(CheckLocalFlags(FLAG_BIT_PARTICLE_UTWIRL_ON))
             {
-               UVAfterTwirlPolar = UTwirl(defaultUVChannel,_TWParameter.xy, _TWStrength);
+               UVAfterTwirlPolar = UTwirl(UVAfterTwirlPolar,_TWParameter.xy, _TWStrength);
             }
             if(CheckLocalFlags(FLAG_BIT_PARTICLE_POLARCOORDINATES_ON))
             {

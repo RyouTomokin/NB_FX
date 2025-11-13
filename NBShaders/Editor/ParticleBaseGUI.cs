@@ -77,8 +77,10 @@ namespace NBShaderEditor
                    "光照功能", () => DrawLightOptions());
             }
 
-            _helper.DrawBigBlockFoldOut(W9ParticleShaderFlags.foldOutBitFeatureOption, 3, GetAnimBoolIndex(3), "特别功能",
-               () => DrawFeatureOptions());
+            // 2025-11-13 自定义修改 关闭特殊功能的折叠
+            // _helper.DrawBigBlockFoldOut(W9ParticleShaderFlags.foldOutBitFeatureOption, 3, GetAnimBoolIndex(3), "特别功能",
+            //    () => DrawFeatureOptions());
+            DrawFeatureOptions();
             _helper.DrawBigBlockFoldOut(W9ParticleShaderFlags.foldOutBit1TaOption, 4, GetAnimBoolIndex(4), "TA调试",
                () => DrawTaOptions());
 
@@ -2824,6 +2826,8 @@ namespace NBShaderEditor
                         // _helper.DrawToggle("极坐标只影响特殊功能","_PolarCordinateOnlySpecialFunciton_Toggle",W9ParticleShaderFlags.FLAG_BIT_PARTICLE_PC_ONLYSPECIALFUNC);
                         _helper.DrawVector4In2Line("_PCCenter","极坐标中心",true);
                         _helper.DrawVector4Component("极坐标强度","_PCCenter","z",true,0f,1f);
+                        _helper.DrawToggle("极坐标使用屏幕UV","_PolarCoordinatesUseScreenUV",
+                            W9ParticleShaderFlags.FLAG_BIT_PARTICLE_1_POLARCOORDINATES_SCREENUV_ON, flagIndex: 1);
                     });
                 };
                 

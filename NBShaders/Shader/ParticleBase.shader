@@ -162,6 +162,7 @@
         // 极坐标 -------------------
         //[Toggle(_JIZUOBIAO)] _N121 ("JIZUOBIAO?", float) = 0
         [HideInInspector]_PolarCoordinatesEnabled ("__PolarCoordinatesEnabled", Float) = 0.0
+        [HideInInspector]_PolarCoordinatesUseScreenUV ("__PolarCoordinatesUseScreenUV", Float) = 0.0
         _PCCenter ("xy:极坐标中心 z:极坐标强度", vector) = (0.5, 0.5, 1, 0)//位置坐标用的前两个分量，z分量给强度。
         
         // 噪波 --------------
