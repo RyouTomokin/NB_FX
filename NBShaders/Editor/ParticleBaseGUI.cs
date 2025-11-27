@@ -2665,6 +2665,16 @@ namespace NBShaderEditor
             "yz平面",
         };
         
+        private string[] _objectSpaceUVModeNames =
+        {
+            "xy平面",
+            "xz平面",
+            "yz平面",
+            "XV",
+            "YV",
+            "ZV",
+        };
+        
         enum SpecialUVChannelMode
         {
             UV2_Texcoord1,
@@ -2853,7 +2863,14 @@ namespace NBShaderEditor
                 
                 Action drawObjectPosUV = () =>
                 {
-                    _helper.DrawPopUp("坐标平面", "_ObjectSpaceUVModeSelector", _posUVModeNames);
+                    // 根据Mesh来源模式选择选项数组
+                    // 粒子系统模式：显示XV、YV、ZV选项（6个选项）
+                    // 模型模式：只显示平面选项（3个选项）
+                    string[] optionsToUse = (_meshSourceMode == MeshSourceMode.Particle || _meshSourceMode == MeshSourceMode.UIParticle)
+                        ? _objectSpaceUVModeNames  // 粒子系统：包含XV、YV、ZV
+                        : _posUVModeNames;         // 模型：只有xy、xz、yz平面
+                    
+                    _helper.DrawPopUp("坐标平面", "_ObjectSpaceUVModeSelector", optionsToUse);
                 };
 
                 if (_helper.ResetTool.IsInitResetData)

@@ -187,6 +187,14 @@
     half4 _ParallaxMapping_Vec;
     half _WorldSpaceUVModeSelector;
     half _ObjectSpaceUVModeSelector;
+    
+    // 粒子系统世界坐标到局部坐标变换矩阵（从外部传入）
+    // 注意：外部需要传入WorldToLocal矩阵（即unity_ObjectToWorld的逆矩阵）
+    // 使用4个Vector传递，避免Unity的SetMatrix自动转置问题
+    float4 _ParticleWorldToLocalMatrix0;
+    float4 _ParticleWorldToLocalMatrix1;
+    float4 _ParticleWorldToLocalMatrix2;
+    float4 _ParticleWorldToLocalMatrix3;
 
     uint _W9ParticleShaderFlags;
 
@@ -762,7 +770,67 @@
         
             baseUVs.screenUV = screenUV;
             baseUVs.worldPosUV = getPosUVByPosUVMode(positionWS,_WorldSpaceUVModeSelector);
-            baseUVs.objectPosUV = getPosUVByPosUVMode(postionOS,_ObjectSpaceUVModeSelector);
+            
+            // 计算局部坐标UV
+            // 在粒子系统模式下，如果使用局部坐标模式，需要使用外部传入的矩阵来计算真正的局部坐标
+            // 因为Unity粒子系统的unity_ObjectToWorld矩阵已经被修改，无法直接使用unity_WorldToObject
+            UNITY_BRANCH
+            if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_IS_PARTICLE_SYSTEM))
+            {
+                // 使用外部传入的WorldToLocal矩阵计算粒子实例的局部坐标
+                // 外部需要传入：transform.worldToLocalMatrix（通过4个Vector逐行传递）
+                float4x4 particleWorldToLocal = float4x4(
+                    _ParticleWorldToLocalMatrix0,
+                    _ParticleWorldToLocalMatrix1,
+                    _ParticleWorldToLocalMatrix2,
+                    _ParticleWorldToLocalMatrix3
+                );
+                float3 particleLocalPos = mul(particleWorldToLocal, float4(positionWS, 1.0)).xyz;
+                
+                // 从WorldToLocal矩阵中提取X、Y、Z三个轴的方向向量和缩放
+                // 矩阵的第0列是X轴，第1列是Y轴，第2列是Z轴
+                float3 basisX = _ParticleWorldToLocalMatrix0.xyz;
+                float3 basisY = _ParticleWorldToLocalMatrix1.xyz;
+                float3 basisZ = _ParticleWorldToLocalMatrix2.xyz;
+                float invScaleX = length(basisX); // WorldToLocal的缩放是倒数的
+                float invScaleY = length(basisY);
+                float invScaleZ = length(basisZ);
+                
+                // UV计算规则：
+                // U方向：根据_ObjectSpaceUVModeSelector选择使用X、Y或Z轴，并除以对应的缩放
+                // V方向：统一使用贴图UV的V方向（defaultUVChannel.y）
+                // 
+                // 模式说明：
+                // 0-2: 平面模式（XY/XZ/YZ平面，使用getPosUVByPosUVMode）
+                // 3: XV模式 - X轴作为U方向
+                // 4: YV模式 - Y轴作为U方向
+                // 5: ZV模式 - Z轴作为U方向
+                float uValue = 0;
+                if (_ObjectSpaceUVModeSelector == 3) // XV模式
+                {
+                    uValue = particleLocalPos.x / max(invScaleX, 0.0001);
+                }
+                else if (_ObjectSpaceUVModeSelector == 4) // YV模式
+                {
+                    uValue = particleLocalPos.y / max(invScaleY, 0.0001);
+                }
+                else if (_ObjectSpaceUVModeSelector == 5) // ZV模式
+                {
+                    uValue = particleLocalPos.z / max(invScaleZ, 0.0001);
+                }
+                else // 0-2: 平面模式（保持原有逻辑）
+                {
+                    float2 localPosUV = getPosUVByPosUVMode(particleLocalPos, _ObjectSpaceUVModeSelector);
+                    uValue = localPosUV.x;
+                }
+                
+                baseUVs.objectPosUV = float2(uValue, defaultUVChannel.y);
+            }
+            else
+            {
+                // 非粒子系统模式，使用mesh模板的局部坐标
+                baseUVs.objectPosUV = getPosUVByPosUVMode(postionOS, _ObjectSpaceUVModeSelector);
+            }
         
             float2 baseMapUV = GetUVByUVMode(_UVModeFlag0,_UVModeFlagType0,FLAG_BIT_UVMODE_POS_0_MAINTEX,baseUVs);
 
