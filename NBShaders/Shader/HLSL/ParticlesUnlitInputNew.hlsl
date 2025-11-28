@@ -187,6 +187,7 @@
     half4 _ParallaxMapping_Vec;
     half _WorldSpaceUVModeSelector;
     half _ObjectSpaceUVModeSelector;
+    half _BeamUVModeSelector;
     
     // 粒子系统世界坐标到局部坐标变换矩阵（从外部传入）
     // 注意：外部需要传入WorldToLocal矩阵（即unity_ObjectToWorld的逆矩阵）
@@ -787,50 +788,91 @@
                 );
                 float3 particleLocalPos = mul(particleWorldToLocal, float4(positionWS, 1.0)).xyz;
                 
-                // 从WorldToLocal矩阵中提取X、Y、Z三个轴的方向向量和缩放
-                // 矩阵的第0列是X轴，第1列是Y轴，第2列是Z轴
-                float3 basisX = _ParticleWorldToLocalMatrix0.xyz;
-                float3 basisY = _ParticleWorldToLocalMatrix1.xyz;
-                float3 basisZ = _ParticleWorldToLocalMatrix2.xyz;
-                float invScaleX = length(basisX); // WorldToLocal的缩放是倒数的
-                float invScaleY = length(basisY);
-                float invScaleZ = length(basisZ);
-                
-                // UV计算规则：
-                // U方向：根据_ObjectSpaceUVModeSelector选择使用X、Y或Z轴，并除以对应的缩放
-                // V方向：统一使用贴图UV的V方向（defaultUVChannel.y）
-                // 
-                // 模式说明：
-                // 0-2: 平面模式（XY/XZ/YZ平面，使用getPosUVByPosUVMode）
-                // 3: XV模式 - X轴作为U方向
-                // 4: YV模式 - Y轴作为U方向
-                // 5: ZV模式 - Z轴作为U方向
-                float uValue = 0;
-                if (_ObjectSpaceUVModeSelector == 3) // XV模式
-                {
-                    uValue = particleLocalPos.x / max(invScaleX, 0.0001);
-                }
-                else if (_ObjectSpaceUVModeSelector == 4) // YV模式
-                {
-                    uValue = particleLocalPos.y / max(invScaleY, 0.0001);
-                }
-                else if (_ObjectSpaceUVModeSelector == 5) // ZV模式
-                {
-                    uValue = particleLocalPos.z / max(invScaleZ, 0.0001);
-                }
-                else // 0-2: 平面模式（保持原有逻辑）
-                {
-                    float2 localPosUV = getPosUVByPosUVMode(particleLocalPos, _ObjectSpaceUVModeSelector);
-                    uValue = localPosUV.x;
-                }
-                
-                baseUVs.objectPosUV = float2(uValue, defaultUVChannel.y);
+                // ObjectPos模式只支持平面模式（0-2）
+                baseUVs.objectPosUV = getPosUVByPosUVMode(particleLocalPos, _ObjectSpaceUVModeSelector);
             }
             else
             {
                 // 非粒子系统模式，使用mesh模板的局部坐标
                 baseUVs.objectPosUV = getPosUVByPosUVMode(postionOS, _ObjectSpaceUVModeSelector);
             }
+            
+            // 计算光束模式UV（Beam模式：支持XV、YV、ZV、UX、UY、UZ）
+            // 光束模式支持模型模式和粒子系统模式
+            // 在粒子系统模式下，需要使用外部传入的矩阵来计算真正的局部坐标
+            // 在模型模式下，直接使用mesh模板的局部坐标（postionOS）
+            float3 localPosForBeam;
+            float invScaleX, invScaleY, invScaleZ;
+            
+            UNITY_BRANCH
+            if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_IS_PARTICLE_SYSTEM))
+            {
+                // 粒子系统模式：使用外部传入的WorldToLocal矩阵计算粒子实例的局部坐标
+                float4x4 particleWorldToLocal = float4x4(
+                    _ParticleWorldToLocalMatrix0,
+                    _ParticleWorldToLocalMatrix1,
+                    _ParticleWorldToLocalMatrix2,
+                    _ParticleWorldToLocalMatrix3
+                );
+                localPosForBeam = mul(particleWorldToLocal, float4(positionWS, 1.0)).xyz;
+                
+                // 从WorldToLocal矩阵中提取X、Y、Z三个轴的方向向量和缩放
+                float3 basisX = _ParticleWorldToLocalMatrix0.xyz;
+                float3 basisY = _ParticleWorldToLocalMatrix1.xyz;
+                float3 basisZ = _ParticleWorldToLocalMatrix2.xyz;
+                invScaleX = length(basisX); // WorldToLocal的缩放是倒数的
+                invScaleY = length(basisY);
+                invScaleZ = length(basisZ);
+            }
+            else
+            {
+                // 模型模式：直接使用mesh模板的局部坐标
+                localPosForBeam = postionOS;
+                // 模型模式下，缩放从unity_ObjectToWorld矩阵中提取
+                float3 scale = float3(
+                    length(unity_ObjectToWorld._m00_m10_m20),
+                    length(unity_ObjectToWorld._m01_m11_m21),
+                    length(unity_ObjectToWorld._m02_m12_m22)
+                );
+                invScaleX = 1.0 / max(scale.x, 0.0001);
+                invScaleY = 1.0 / max(scale.y, 0.0001);
+                invScaleZ = 1.0 / max(scale.z, 0.0001);
+            }
+            
+            // 光束模式UV计算规则：
+            // 模式说明：
+            // 0: XV模式 - U=局部X轴（缩放后），V=defaultUV.y
+            // 1: YV模式 - U=局部Y轴（缩放后），V=defaultUV.y
+            // 2: ZV模式 - U=局部Z轴（缩放后），V=defaultUV.y
+            // 3: UX模式 - U=defaultUV.x，V=局部X轴（缩放后）
+            // 4: UY模式 - U=defaultUV.x，V=局部Y轴（缩放后）
+            // 5: UZ模式 - U=defaultUV.x，V=局部Z轴（缩放后）
+            float2 beamUVValue = float2(0, 0);
+            switch ((int)_BeamUVModeSelector)
+            {
+                case 0: // XV
+                    beamUVValue = float2(localPosForBeam.x / max(invScaleX, 0.0001), defaultUVChannel.y);
+                    break;
+                case 1: // YV
+                    beamUVValue = float2(localPosForBeam.y / max(invScaleY, 0.0001), defaultUVChannel.y);
+                    break;
+                case 2: // ZV
+                    beamUVValue = float2(localPosForBeam.z / max(invScaleZ, 0.0001), defaultUVChannel.y);
+                    break;
+                case 3: // UX
+                    beamUVValue = float2(defaultUVChannel.x, localPosForBeam.x / max(invScaleX, 0.0001));
+                    break;
+                case 4: // UY
+                    beamUVValue = float2(defaultUVChannel.x, localPosForBeam.y / max(invScaleY, 0.0001));
+                    break;
+                case 5: // UZ
+                    beamUVValue = float2(defaultUVChannel.x, localPosForBeam.z / max(invScaleZ, 0.0001));
+                    break;
+                default:
+                    beamUVValue = float2(localPosForBeam.z / max(invScaleZ, 0.0001), defaultUVChannel.y);
+                    break;
+            }
+            baseUVs.beamUV = beamUVValue;
         
             float2 baseMapUV = GetUVByUVMode(_UVModeFlag0,_UVModeFlagType0,FLAG_BIT_UVMODE_POS_0_MAINTEX,baseUVs);
 

@@ -2655,7 +2655,8 @@ namespace NBShaderEditor
             "主贴图",
             "屏幕UV",
             "世界坐标",
-            "局部本地坐标"
+            "局部本地坐标",
+            "光束模式"
         };
         
         private string[] _posUVModeNames =
@@ -2665,14 +2666,14 @@ namespace NBShaderEditor
             "yz平面",
         };
         
-        private string[] _objectSpaceUVModeNames =
+        private string[] _beamModeNames =
         {
-            "xy平面",
-            "xz平面",
-            "yz平面",
             "XV",
             "YV",
             "ZV",
+            "UX",
+            "UY",
+            "UZ",
         };
         
         enum SpecialUVChannelMode
@@ -2863,14 +2864,13 @@ namespace NBShaderEditor
                 
                 Action drawObjectPosUV = () =>
                 {
-                    // 根据Mesh来源模式选择选项数组
-                    // 粒子系统模式：显示XV、YV、ZV选项（6个选项）
-                    // 模型模式：只显示平面选项（3个选项）
-                    string[] optionsToUse = (_meshSourceMode == MeshSourceMode.Particle || _meshSourceMode == MeshSourceMode.UIParticle)
-                        ? _objectSpaceUVModeNames  // 粒子系统：包含XV、YV、ZV
-                        : _posUVModeNames;         // 模型：只有xy、xz、yz平面
-                    
-                    _helper.DrawPopUp("坐标平面", "_ObjectSpaceUVModeSelector", optionsToUse);
+                    _helper.DrawPopUp("坐标平面", "_ObjectSpaceUVModeSelector", _posUVModeNames);
+                };
+                
+                Action drawBeamUV = () =>
+                {
+                    // 光束模式：支持模型模式和粒子系统模式
+                    _helper.DrawPopUp("光束模式", "_BeamUVModeSelector", _beamModeNames);
                 };
 
                 if (_helper.ResetTool.IsInitResetData)
@@ -2879,6 +2879,7 @@ namespace NBShaderEditor
                     drawPolarOrTwirl();
                     drawWorldPosUV();
                     drawObjectPosUV();
+                    drawBeamUV();
                 }
                 else
                 {
@@ -2898,6 +2899,9 @@ namespace NBShaderEditor
                             break;
                         case UVMode.ObjectPos:
                             drawObjectPosUV();
+                            break;
+                        case UVMode.Beam:
+                            drawBeamUV();
                             break;
                     }
                 }

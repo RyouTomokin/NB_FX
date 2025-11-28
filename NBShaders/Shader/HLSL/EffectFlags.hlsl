@@ -207,6 +207,7 @@
         float2 screenUV;
         float2 worldPosUV;
         float2 objectPosUV;
+        float2 beamUV;
     };
 
     float2 GetUVByUVMode(uint flagProperty,uint flagTypeProperty,int flagPos,BaseUVs baseUVs)
@@ -242,6 +243,14 @@
                     return baseUVs.worldPosUV;
                     case 3:
                     return baseUVs.objectPosUV;
+                    default:
+                    return baseUVs.defaultUVChannel;
+                }
+            case 2:
+                switch(flagProperty)
+                {
+                    case 0:
+                    return baseUVs.beamUV;
                     default:
                     return baseUVs.defaultUVChannel;
                 }

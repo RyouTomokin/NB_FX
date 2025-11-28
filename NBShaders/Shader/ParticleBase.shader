@@ -377,6 +377,7 @@
     	
     	_WorldSpaceUVModeSelector("_WordSpaceUVModeSelector",Float) = 1
     	_ObjectSpaceUVModeSelector("_ObjectSpaceUVModeSelector",Float) = 1
+    	_BeamUVModeSelector("_BeamUVModeSelector",Float) = 2
     	
     	// 粒子系统世界坐标到局部坐标变换矩阵（从外部传入，用于计算真正的局部坐标）
     	// 注意：外部需要传入WorldToLocal矩阵（即unity_ObjectToWorld的逆矩阵）

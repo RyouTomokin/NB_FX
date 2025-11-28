@@ -579,6 +579,7 @@ namespace NBShader
             ScreenUV, //1 0b_01 modeIndex 01
             WorldPos, //2 0b_10 modeIndex 01
             ObjectPos, //3 0b_11 modeIndex 01
+            Beam, //0 0b_00 modeIndex 10
             UnknownOrMixed = -1
         }
 
