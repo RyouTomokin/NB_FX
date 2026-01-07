@@ -182,6 +182,13 @@
     half4 _VertexOffset_MaskMap_ST;
     half3 _VertexOffset_MaskMap_Vec;
 
+    // FXWhip相关参数
+    half _FXWhip_Toggle;  // 功能开关（由于标志位已满，使用属性直接检查）
+    half _FXWhip_Num;  // 方向数组数量（用于边界检查）
+    half _FXWhip_Distance;  // 距离
+    half3 _FXWhip_StartPosition;  // 起始位置
+    half3 _FXWhip_EndPosition;  // 结束位置
+
     half _ParallaxMapping_Intensity;
     half4 _ParallaxMapping_Map_ST;
     half4 _ParallaxMapping_Vec;
@@ -221,6 +228,8 @@
 
     CBUFFER_END
 
+    // FXWhip方向数组（固定大小256，与StandardFX保持一致）
+    uniform float4 _FXWhip_TexDir[256];
 
     bool CheckLocalFlags(uint bits)
     {

@@ -2,6 +2,7 @@
     #define PARTICLESUNLITFORWARDPASS
     #include "Packages/com.xuanxuan.nb.fx/NBShaders/Shader/HLSL/ParticlesUnlitInputNew.hlsl"
     #include "Packages/com.xuanxuan.nb.fx/NBShaders/Shader/HLSL/SixWaySmokeLit.hlsl"
+    #include "Packages/com.xuanxuan.nb.fx/NBShaders/Shader/HLSL/FXWhip.hlsl"
 
     
     ///////////////////////////////////////////////////////////////////////////////
@@ -185,6 +186,27 @@
 
             //再算一遍
             output.positionWS.xyz = mul(unity_ObjectToWorld, positionOS).xyz;
+            output.positionOS.xyz = positionOS;
+            output.clipPos = TransformObjectToHClip(positionOS);
+        }
+        
+        // FXWhip顶点偏移（使用UNITY_BRANCH确保零性能消耗）
+        // 注意：由于FLAG_BIT_PARTICLE_1_*系列标志位已满，直接检查_FXWhip_Toggle属性
+        UNITY_BRANCH
+        if(_FXWhip_Toggle > 0.5)
+        {
+            // 获取当前世界空间位置
+            float3 worldPos = output.positionWS.xyz;
+            
+            // 应用FXWhip偏移
+            float3 newWorldPos = FXWhip(worldPos);
+            
+            // 转换回对象空间
+            float3 newPositionOS = mul(unity_WorldToObject, float4(newWorldPos, 1.0)).xyz;
+            positionOS.xyz = newPositionOS;
+            
+            // 更新输出位置
+            output.positionWS.xyz = newWorldPos;
             output.positionOS.xyz = positionOS;
             output.clipPos = TransformObjectToHClip(positionOS);
         }

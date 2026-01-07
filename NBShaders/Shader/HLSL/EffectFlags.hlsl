@@ -67,7 +67,8 @@
     #define FLAG_BIT_PARTICLE_1_SIXWAY_RAMPMAP (1 << 29)
     #define FLAG_BIT_PARTICLE_1_MATCAP_MULTY_MODE (1 << 30)
     #define FLAG_BIT_PARTICLE_1_POLARCOORDINATES_SCREENUV_ON (1u << 31)
-    
+    // 注意：FLAG_BIT_PARTICLE_1_*系列已占满32位
+    // FXWhip功能：由于标志位已满，直接检查_FXWhip_Toggle属性（使用UNITY_BRANCH确保零性能消耗）
  
     //WrapMode不能够超过16位（因为会占用x和x+16两个bit位）
     #define FLAG_BIT_WRAPMODE_BASEMAP (1 << 0)

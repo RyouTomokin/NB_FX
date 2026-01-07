@@ -325,6 +325,11 @@
     	_VertexOffset_MaskMap("顶点偏移遮罩贴图",2D) = "white"{}
         _VertexOffset_MaskMap_Vec("xy:顶点偏移遮罩动画z:顶点偏移遮罩强度",Vector) = (0,0,1,0)
     	
+    	_FXWhip_Toggle("FXWhip顶点偏移开关",Float) = 0
+    	_FXWhip_Num("FXWhip方向数组数量",Integer) = 0
+    	_FXWhip_Distance("FXWhip距离",Float) = 1.0
+    	_FXWhip_StartPosition("FXWhip起始位置",Vector) = (0,0,0,0)
+    	_FXWhip_EndPosition("FXWhip结束位置",Vector) = (0,0,1,0)
         
         _ParallaxMapping_Toggle("视差",Float) = 0
         _ParallaxMapping_Map("视差贴图",2D) = "white"{}

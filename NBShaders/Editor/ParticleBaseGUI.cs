@@ -1553,6 +1553,20 @@ namespace NBShaderEditor
                         });
                 });
 
+            // FXWhip顶点鞭化
+            _helper.DrawToggle("顶点鞭化(FXWhip)", "_FXWhip_Toggle", isIndentBlock: true, fontStyle: FontStyle.Bold,
+                drawBlock: isFXWhipToggle =>
+                {
+                    if (!isFXWhipToggle.hasMixedValue && isFXWhipToggle.floatValue > 0.5f || _helper.ResetTool.IsInitResetData)
+                    {
+                        matEditor.ShaderProperty(_helper.GetProperty("_FXWhip_Num"), "FXWhip方向数组数量");
+                        _helper.DrawFloat("FXWhip距离", "_FXWhip_Distance");
+                        _helper.DrawVector4XYZComponet("FXWhip起始位置", "_FXWhip_StartPosition");
+                        _helper.DrawVector4XYZComponet("FXWhip结束位置", "_FXWhip_EndPosition");
+                        EditorGUILayout.HelpBox("方向数组需要通过C#代码使用Material.SetVectorArray(\"_FXWhip_TexDir\", array)设置", MessageType.Info);
+                    }
+                });
+
             if (_uiEffectEnabled == 0)
             {
                 _helper.DrawToggleFoldOut(W9ParticleShaderFlags.foldOutDepthOutline, 3, GetAnimBoolIndex(3), "深度描边",
