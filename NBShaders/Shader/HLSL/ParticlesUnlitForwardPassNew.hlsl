@@ -270,7 +270,22 @@
 
         #ifdef _DEPTH_DECAL
             float3 fragWorldPos = ComputeWorldSpacePosition(screenUV, sceneZBufferDepth, UNITY_MATRIX_I_VP);
-            float3 fragobjectPos = TransformWorldToObject(fragWorldPos);
+            float3 fragobjectPos;
+            UNITY_BRANCH
+            if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_IS_PARTICLE_SYSTEM))
+            {
+                float4x4 particleWorldToLocal = float4x4(
+                    _ParticleWorldToLocalMatrix0,
+                    _ParticleWorldToLocalMatrix1,
+                    _ParticleWorldToLocalMatrix2,
+                    _ParticleWorldToLocalMatrix3
+                );
+                fragobjectPos = mul(particleWorldToLocal, float4(fragWorldPos, 1.0)).xyz;
+            }
+            else
+            {
+                fragobjectPos = TransformWorldToObject(fragWorldPos);
+            }
         
             float3 absFragObjectPos = abs(fragobjectPos);
             half clipValue = step(absFragObjectPos.x,0.5);
