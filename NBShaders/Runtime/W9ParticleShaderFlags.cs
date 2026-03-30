@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace NBShader
 {
@@ -312,6 +312,8 @@ namespace NBShader
 
         public const int FLAGBIT_POS_3_CUSTOMDATA_VERTEX_OFFSET_MASK_X = 0 * 4;
         public const int FLAGBIT_POS_3_CUSTOMDATA_VERTEX_OFFSET_MASK_Y = 1 * 4;
+        public const int FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_X = 2 * 4;
+        public const int FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_Y = 3 * 4;
 
 
         public const int isCustomDataBit = 1 << 3;

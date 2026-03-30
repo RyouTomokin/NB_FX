@@ -458,6 +458,10 @@ namespace NBShaderEditor
                     0);
                 DrawCustomDataSelect("主贴图Y轴偏移自定义曲线", W9ParticleShaderFlags.FLAGBIT_POS_0_CUSTOMDATA_MAINTEX_OFFSET_Y,
                     0);
+                DrawCustomDataSelect("主贴图X轴缩放自定义曲线", W9ParticleShaderFlags.FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_X,
+                    3);
+                DrawCustomDataSelect("主贴图Y轴缩放自定义曲线", W9ParticleShaderFlags.FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_Y,
+                    3);
 
                 if (_meshSourceMode != MeshSourceMode.UIEffectSprite)
                 {

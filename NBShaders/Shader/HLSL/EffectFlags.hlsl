@@ -1,4 +1,4 @@
-﻿#ifndef EFFECT_FLAGS
+#ifndef EFFECT_FLAGS
 #define EFFECT_FLAGS
 
     #define FLAG_BIT_SATURABILITY_ON (1 << 0)
@@ -117,6 +117,8 @@
 
     #define FLAGBIT_POS_3_CUSTOMDATA_VERTEX_OFFSET_MASK_X (0*4)
     #define FLAGBIT_POS_3_CUSTOMDATA_VERTEX_OFFSET_MASK_Y (1*4)
+    #define FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_X (2*4)
+    #define FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_Y (3*4)
 
     #define isCustomDataBit (1 << 3)
     #define Data12Bit (1 << 2)

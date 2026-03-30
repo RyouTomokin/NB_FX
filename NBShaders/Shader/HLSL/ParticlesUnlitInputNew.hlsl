@@ -903,6 +903,10 @@
             }
             else
             {
+                float mainTexScaleX = GetCustomData(_W9ParticleCustomDataFlag3, FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_X, 1.0, VaryingsP_Custom1, VaryingsP_Custom2);
+                float mainTexScaleY = GetCustomData(_W9ParticleCustomDataFlag3, FLAGBIT_POS_3_CUSTOMDATA_MAINTEX_SCALE_Y, 1.0, VaryingsP_Custom1, VaryingsP_Custom2);
+                baseMapUV.x *= mainTexScaleX;
+                baseMapUV.y *= mainTexScaleY;
                 baseMapUV.x += GetCustomData(_W9ParticleCustomDataFlag0,FLAGBIT_POS_0_CUSTOMDATA_MAINTEX_OFFSET_X,0,VaryingsP_Custom1,VaryingsP_Custom2);
                 baseMapUV.y += GetCustomData(_W9ParticleCustomDataFlag0,FLAGBIT_POS_0_CUSTOMDATA_MAINTEX_OFFSET_Y,0,VaryingsP_Custom1,VaryingsP_Custom2);
                 mainTexUV = TRANSFORM_TEX(baseMapUV, _BaseMap);  //主帖图UV重复和偏移
