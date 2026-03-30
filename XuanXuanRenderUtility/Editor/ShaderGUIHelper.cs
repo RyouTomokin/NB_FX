@@ -1677,13 +1677,42 @@ namespace NBShaderEditor
                 alphaKeysCount = 2;
             }
         }
+
+        /// <summary>
+        /// 材质上的 count 可能因拷贝/旧数据超出 GUI 提供的 property 数组长度，必须在访问数组前钳制。
+        /// </summary>
+        static void ClampGradientKeyCountsToPropertyArrays(MaterialProperty[] colorProperties,
+            MaterialProperty[] alphaProperties, bool isBlackAndWhiteGradient, bool isNoAlphaColorGradient,
+            ref int colorKeysCount, ref int alphaKeysCount)
+        {
+            if (isBlackAndWhiteGradient && alphaProperties != null)
+            {
+                int maxColor = alphaProperties.Length * 2;
+                colorKeysCount = Mathf.Clamp(colorKeysCount, 0, maxColor);
+            }
+            else if (colorProperties != null)
+            {
+                colorKeysCount = Mathf.Clamp(colorKeysCount, 0, colorProperties.Length);
+            }
+
+            if (!isBlackAndWhiteGradient && !isNoAlphaColorGradient && alphaProperties != null)
+            {
+                int maxAlpha = alphaProperties.Length * 2;
+                alphaKeysCount = Mathf.Clamp(alphaKeysCount, 0, maxAlpha);
+            }
+        }
+
         bool GradientPropertyHasMixedValue(MaterialProperty countProperty,
             MaterialProperty[] colorProperties = null, MaterialProperty[] alphaProperties = null)
         {
           
             
             GetGradientKeyCount(countProperty, colorProperties, alphaProperties,out int countPropertyIntValue, out int colorKeysCount,out int alphaKeysCount);
-            
+            GetGradientConditionBool(colorProperties, alphaProperties, out bool isBlackAndWhiteGradient,
+                out bool isNoAlphaColorGradient);
+            ClampGradientKeyCountsToPropertyArrays(colorProperties, alphaProperties, isBlackAndWhiteGradient,
+                isNoAlphaColorGradient, ref colorKeysCount, ref alphaKeysCount);
+
             bool hasMixedValue = false;
             hasMixedValue |= countProperty.hasMixedValue;
             if (colorProperties != null)
@@ -1695,7 +1724,8 @@ namespace NBShaderEditor
             }
             if (alphaProperties != null)
             {
-                for (int i = 0; i < Mathf.CeilToInt(alphaKeysCount/2f); i++)
+                int alphaVecCount = Mathf.Min(Mathf.CeilToInt(alphaKeysCount / 2f), alphaProperties.Length);
+                for (int i = 0; i < alphaVecCount; i++)
                 {
                     hasMixedValue |= alphaProperties[i].hasMixedValue;
                 }
@@ -1718,7 +1748,9 @@ namespace NBShaderEditor
         {
             GetGradientConditionBool(colorProperties,alphaProperties,out bool isBlackAndWhiteGradient,out bool isNoAlphaColorGradient);
             GetGradientKeyCount(countProperty, colorProperties, alphaProperties,out int countPropertyIntValue, out int colorKeysCount,out int alphaKeysCount);
-            
+            ClampGradientKeyCountsToPropertyArrays(colorProperties, alphaProperties, isBlackAndWhiteGradient,
+                isNoAlphaColorGradient, ref colorKeysCount, ref alphaKeysCount);
+
             if (colorProperties != null || isBlackAndWhiteGradient)
             {
                 GradientColorKey[] colorKeys;
