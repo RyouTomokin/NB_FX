@@ -733,8 +733,17 @@
             int colorRampAlphaCount = _RampColorCount >> 16;
 
             half4 rampColor;
-            rampColor.rgb = GetGradientColorValue(colorRampColorArr,colorRampColorTimeArr,colorRampColorCount,rampValue);
-            rampColor.a = GetGradientAlphaValue(colorRampAlphaArr,colorRampAlphaTimeArr,colorRampAlphaCount,rampValue);
+            UNITY_BRANCH
+            if (_RampColorGradientMode > 0.5h)
+            {
+                rampColor.rgb = GetGradientColorValueFixed(colorRampColorArr, colorRampColorTimeArr, colorRampColorCount, rampValue);
+                rampColor.a = GetGradientAlphaValueFixed(colorRampAlphaArr, colorRampAlphaTimeArr, colorRampAlphaCount, rampValue);
+            }
+            else
+            {
+                rampColor.rgb = GetGradientColorValue(colorRampColorArr,colorRampColorTimeArr,colorRampColorCount,rampValue);
+                rampColor.a = GetGradientAlphaValue(colorRampAlphaArr,colorRampAlphaTimeArr,colorRampAlphaCount,rampValue);
+            }
 
             rampColor *= _RampColorBlendColor;
         

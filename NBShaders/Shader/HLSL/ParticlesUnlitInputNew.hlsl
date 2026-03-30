@@ -159,6 +159,7 @@
     half4 _RampColorAlpha1;
     half4 _RampColorAlpha2;
     uint _RampColorCount;
+    half _RampColorGradientMode;
     half4 _RampColorBlendColor;
     float4 _RampColorMapOffset;
     half4 _RampColorMap_ST;
@@ -1528,6 +1529,26 @@
         }
     }
 
+    /// Unity Gradient Fixed：每段内为常数色，与 Blend 的平滑插值不同。
+    half3 GetGradientColorValueFixed(half3 colorArr[6], half timeArr[6], int arrCount, half gradientTime)
+    {
+        if (arrCount <= 0)
+            return half3(0, 0, 0);
+        if (arrCount == 1)
+            return colorArr[0];
+        if (gradientTime < timeArr[0])
+            return colorArr[0];
+        [unroll]
+        for (int i = 1; i < 6; i++)
+        {
+            if (i >= arrCount)
+                break;
+            if (gradientTime < timeArr[i])
+                return colorArr[i];
+        }
+        return colorArr[arrCount - 1];
+    }
+
     half GetGradientAlphaValue(half alphaArr[6],half timeArr[6], int arrCount,half gradientTime)
     {
         if (gradientTime <= timeArr[0])
@@ -1547,6 +1568,25 @@
             alpha *= alpha;//Make Alpha Smoother
             return alpha ;
         }
+    }
+
+    half GetGradientAlphaValueFixed(half alphaArr[6], half timeArr[6], int arrCount, half gradientTime)
+    {
+        if (arrCount <= 0)
+            return 1;
+        if (arrCount == 1)
+            return alphaArr[0];
+        if (gradientTime < timeArr[0])
+            return alphaArr[0];
+        [unroll]
+        for (int i = 1; i < 6; i++)
+        {
+            if (i >= arrCount)
+                break;
+            if (gradientTime < timeArr[i])
+                return alphaArr[i];
+        }
+        return alphaArr[arrCount - 1];
     }
 
     void ColorAdjustment(inout half3 result,half4 customData1,half4 customData2)

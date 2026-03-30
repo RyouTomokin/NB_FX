@@ -1658,8 +1658,8 @@ namespace NBShaderEditor
             // Debug.Log("UndoGradient");
             isUpateGradientPickerCache = true;
         }
-        Dictionary<(string,string),bool> gradientsUpdateDic = new Dictionary<(string,string),bool>();
-        Dictionary<(string,string),Gradient> gradientsDic = new Dictionary<(string,string),Gradient>();
+        Dictionary<(string, string), bool> gradientsUpdateDic = new Dictionary<(string, string), bool>();
+        Dictionary<(string, string), Gradient> gradientsDic = new Dictionary<(string, string), Gradient>();
 
         void GetGradientKeyCount(MaterialProperty countProperty,
             MaterialProperty[] colorProperties, MaterialProperty[] alphaProperties,out int countPropertyIntValue,out int colorKeysCount,out int alphaKeysCount)
@@ -1744,7 +1744,8 @@ namespace NBShaderEditor
         }
 
         void SetGradientByProperty(Gradient gradient, MaterialProperty countProperty,
-            MaterialProperty[] colorProperties = null, MaterialProperty[] alphaProperties = null)
+            MaterialProperty[] colorProperties = null, MaterialProperty[] alphaProperties = null,
+            MaterialProperty gradientModeProperty = null)
         {
             GetGradientConditionBool(colorProperties,alphaProperties,out bool isBlackAndWhiteGradient,out bool isNoAlphaColorGradient);
             GetGradientKeyCount(countProperty, colorProperties, alphaProperties,out int countPropertyIntValue, out int colorKeysCount,out int alphaKeysCount);
@@ -1829,15 +1830,23 @@ namespace NBShaderEditor
                 gradient.alphaKeys = alphaKeys;
                 
             }
+
+            if (gradientModeProperty != null)
+                gradient.mode = gradientModeProperty.floatValue > 0.5f ? GradientMode.Fixed : GradientMode.Blend;
+            else
+                gradient.mode = GradientMode.Blend;
         }
         //如果是黑白Gradient，则取Gradient的颜色的黑白值（这样在面板上可视化比较好）
         //如果既有颜色，也有Alpha。则在CountProperty上采取前16位和后16位编码。
         //原则：gradient对象只是一个操作中介。取值应该直接在MatProperty上去，Set值也应该在验证合法后才能Set，不合法应该提出警告。
-        public void DrawGradient(bool hdr,ColorSpace colorSpace,string label,int maxCount,string countPropertyName,MaterialProperty[] colorProperties = null,MaterialProperty[] alphaProperties = null)
+        public void DrawGradient(bool hdr,ColorSpace colorSpace,string label,int maxCount,string countPropertyName,MaterialProperty[] colorProperties = null,MaterialProperty[] alphaProperties = null,string gradientModePropertyName = null)
         {
-            (string,string) nameTuple = (label, countPropertyName);
+            (string, string) nameTuple = (label, countPropertyName);
+            MaterialProperty gradientModeProp = string.IsNullOrEmpty(gradientModePropertyName)
+                ? null
+                : GetProperty(gradientModePropertyName);
 
-        
+            bool gradientPickerRefreshFromUndo = isUpateGradientPickerCache;
             if (isUpateGradientPickerCache)
             {
                 foreach (var keys in gradientsUpdateDic.Keys.ToList())
@@ -1875,26 +1884,29 @@ namespace NBShaderEditor
                     gradientsUpdateDic[nameTuple] = false;
                 }
                 
-                SetGradientByProperty(gradient,countProperty, colorProperties, alphaProperties);
-                
-                GradientReflectionHelper.RefreshGradientData();
-                // Debug.Log("----------------SetCurrentGradient------------------");
+                SetGradientByProperty(gradient,countProperty, colorProperties, alphaProperties, gradientModeProp);
+
+                if (gradientPickerRefreshFromUndo)
+                    GradientReflectionHelper.RefreshGradientData();
             }
             else
             {
                 gradient = gradientsDic[nameTuple];
             }
             
-            EditorGUI.showMixedValue = GradientPropertyHasMixedValue(countProperty, colorProperties, alphaProperties);
+            bool gradientMixed = GradientPropertyHasMixedValue(countProperty, colorProperties, alphaProperties);
+            if (gradientModeProp != null)
+                gradientMixed |= gradientModeProp.hasMixedValue;
+            EditorGUI.showMixedValue = gradientMixed;
             GetGradientKeyCount(countProperty, colorProperties, alphaProperties,out int countPropertyIntValue, out int colorKeysCount,out int alphaKeysCount);
             GetGradientConditionBool(colorProperties, alphaProperties,out bool isBlackAndWhiteGradient,out bool isNoAlphaColorGradient);
             
             EditorGUI.BeginChangeCheck();
             gradient = EditorGUI.GradientField(gradientRect, new GUIContent(label),gradient,hdr,colorSpace);
+            gradientsDic[nameTuple] = gradient;
 
             Action onGradientEndChangeCheck = () =>
             {
-                gradientsUpdateDic[nameTuple] = true;
                 int countPropertyValue = countPropertyIntValue;
 
                 if (colorProperties != null || isBlackAndWhiteGradient)
@@ -1960,6 +1972,9 @@ namespace NBShaderEditor
                     }
                 }
 
+                if (gradientModeProp != null)
+                    gradientModeProp.floatValue = (float)gradient.mode;
+
                 countProperty.intValue = countPropertyValue;
                 ResetTool.CheckOnValueChange(nameTuple);
                 
@@ -1995,7 +2010,14 @@ namespace NBShaderEditor
                             alphaPropPack.property.vectorValue = shader.GetPropertyDefaultVectorValue(alphaPropPack.index);
                         }
                     }
-                    SetGradientByProperty(gradient,countProperty, colorProperties, alphaProperties);
+
+                    if (gradientModeProp != null && ShaderPropertyPacksDic.ContainsKey(gradientModePropertyName))
+                    {
+                        ShaderPropertyPack modePack = ShaderPropertyPacksDic[gradientModePropertyName];
+                        modePack.property.floatValue = 0f;
+                    }
+
+                    SetGradientByProperty(gradient,countProperty, colorProperties, alphaProperties, gradientModeProp);
 
                 },onValueChangedCallBack:onGradientEndChangeCheck,
                 checkHasMixedValueOnValueChange: () =>

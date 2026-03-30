@@ -1195,7 +1195,7 @@ namespace NBShaderEditor
                     rampColorAlphaPropArr[1] = _helper.GetProperty("_RampColorAlpha1");
                     rampColorAlphaPropArr[2] = _helper.GetProperty("_RampColorAlpha2");
                     _helper.DrawGradient(true, ColorSpace.Gamma, "映射颜色", 6, "_RampColorCount",
-                        rampColorPropArr, rampColorAlphaPropArr);
+                        rampColorPropArr, rampColorAlphaPropArr, "_RampColorGradientMode");
                     _helper.DrawPopUp("Ramp颜色混合模式", "_RampColorBlendMode", rampColorBlendMode, drawOnValueChangedBlock:
                         modeProp =>
                         {
