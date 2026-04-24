@@ -1,4 +1,4 @@
-#ifndef EFFECT_FLAGS
+﻿#ifndef EFFECT_FLAGS
 #define EFFECT_FLAGS
 
     #define FLAG_BIT_SATURABILITY_ON (1 << 0)

@@ -210,6 +210,35 @@
             output.positionOS.xyz = positionOS;
             output.clipPos = TransformObjectToHClip(positionOS);
         }
+
+        // _MoveToCamera：透视沿射线改与摄像机距离（>0 靠近），距摄像机不低于 near+0.02；正交沿视前平移。
+        UNITY_BRANCH
+        if (abs(_MoveToCamera) > 1e-6)
+        {
+            float3 worldPos = mul(unity_ObjectToWorld, float4(positionOS.xyz, 1.0)).xyz;
+            float3 camWS = GetCameraPositionWS();
+
+            if (IsPerspectiveProjection())
+            {
+                float3 r = camWS - worldPos;
+                float d = length(r);
+                if (d > 1e-8)
+                {
+                    float3 u = r * (1.0 / d);
+                    float t = max(d - _MoveToCamera, _ProjectionParams.y + 0.02);
+                    worldPos = camWS - u * t;
+                }
+            }
+            else
+            {
+                worldPos -= GetViewForwardDir() * _MoveToCamera;
+            }
+
+            positionOS.xyz = mul(unity_WorldToObject, float4(worldPos, 1.0)).xyz;
+            output.positionWS.xyz = worldPos;
+            output.positionOS.xyz = positionOS;
+            output.clipPos = TransformObjectToHClip(positionOS);
+        }
         
         UNITY_BRANCH
         if(needEyeDepth())

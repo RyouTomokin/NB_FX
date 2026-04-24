@@ -95,6 +95,7 @@
     float4 _TWParameter;
     float _TWStrength;
     float4 _Fade;
+    float _MoveToCamera;
     float _MaskMapRotationSpeed;
     
 

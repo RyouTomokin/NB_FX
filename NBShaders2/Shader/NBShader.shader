@@ -1,4 +1,4 @@
-﻿Shader "Hidden/Effects/NBShader2开发中"
+Shader "Hidden/Effects/NBShader2开发中"
 //Shader "Effects/NBShader2开发中"
 {
     Properties
@@ -359,6 +359,7 @@
 
         //基于深度的a通道控制
         [HideInInspector] _Fade("xy:近距离透明过度范围", Vector) = (2,4,0,0)
+        _MoveToCamera("向摄像机偏移", Range(-20, 20)) = 0
 
         [HideInInspector] _InspectorData("__InspectorData-ignore",vector) = (1,1,0,0)
     

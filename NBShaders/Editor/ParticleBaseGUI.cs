@@ -392,6 +392,7 @@ namespace NBShaderEditor
 
             if (_uiEffectEnabled == 0)
             {
+                _helper.DrawSlider("向摄像机偏移", "_MoveToCamera", -20f, 20f);
                 _helper.DrawToggleFoldOut(W9ParticleShaderFlags.foldOutBitSoftParticles, 3, GetAnimBoolIndex(3), "软粒子",
                     "_SoftParticlesEnabled", shaderKeyword: "_SOFTPARTICLES_ON", isIndentBlock: true, drawBlock:
                     (isToggle) =>
