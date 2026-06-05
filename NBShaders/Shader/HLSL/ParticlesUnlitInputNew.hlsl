@@ -107,6 +107,8 @@
     half4 _FresnelUnit2;
     half4 _DepthOutline_Vec;
     half4 _DepthOutline_Color;
+    half _DepthDecalFadeMode;
+    half4 _DepthDecalFadeParams;
     half4 _FresnelColor;
     half4 _ColorA;
     float4 _ClipRect;
@@ -475,6 +477,28 @@
             fade = NB_Remap(dist, near,far,0,1);
         }
         return fade;
+    }
+
+    half ComputeDepthDecalVerticalAlpha(float3 fragObjectPos)
+    {
+        if (_DepthDecalFadeMode < 0.5)
+        {
+            return 1.0;
+        }
+
+        half yDist = abs(fragObjectPos.y);
+        if (_DepthDecalFadeMode >= 1.5)
+        {
+            float4x4 objectToWorld = GetObjectToWorldMatrix();
+            half scaleY = length(half3(objectToWorld._m01, objectToWorld._m11, objectToWorld._m21));
+            yDist *= scaleY;
+        }
+
+        half fadeStart = _DepthDecalFadeParams.x;
+        half fadeEnd = max(_DepthDecalFadeParams.y, fadeStart + 1e-4);
+        half fadePower = max(_DepthDecalFadeParams.z, 0.01);
+        half decalAlpha = NB_Remap(yDist, fadeStart, fadeEnd, 1, 0);
+        return pow(saturate(decalAlpha), fadePower);
     }
 
     

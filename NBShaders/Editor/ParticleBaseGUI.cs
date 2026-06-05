@@ -1586,6 +1586,43 @@ namespace NBShaderEditor
 
                 _helper.DrawToggle("深度贴花", "_DepthDecal_Toggle", shaderKeyword: "_DEPTH_DECAL",
                     fontStyle: FontStyle.Bold,
+                    drawBlock: isToggle =>
+                    {
+                        if (isToggle.hasMixedValue || isToggle.floatValue <= 0.5f)
+                            return;
+
+                        MaterialProperty fadeMode = _helper.GetProperty("_DepthDecalFadeMode");
+                        MaterialProperty fadeParams = _helper.GetProperty("_DepthDecalFadeParams");
+                        if (fadeMode == null || fadeParams == null)
+                            return;
+
+                        EditorGUI.BeginChangeCheck();
+                        int mode = EditorGUILayout.Popup("上下过渡模式", (int)fadeMode.floatValue,
+                            new[] { "无过渡", "比例过渡", "固定距离(米)" });
+                        if (EditorGUI.EndChangeCheck())
+                            fadeMode.floatValue = mode;
+                        Vector4 fadeVec = fadeParams.vectorValue;
+                        EditorGUI.BeginChangeCheck();
+                        if (mode == 0)
+                        {
+                            EditorGUILayout.HelpBox("关闭上下半透过渡，仅在贴花盒边界硬裁剪。", MessageType.Info);
+                        }
+                        else if (mode == 1)
+                        {
+                            fadeVec.x = EditorGUILayout.Slider("过渡起始(比例)", fadeVec.x, 0f, 0.5f);
+                            fadeVec.y = EditorGUILayout.Slider("过渡结束(比例)", fadeVec.y, fadeVec.x + 0.001f, 0.5f);
+                            fadeVec.z = EditorGUILayout.Slider("过渡柔和度", fadeVec.z, 0.1f, 4f);
+                        }
+                        else
+                        {
+                            fadeVec.x = EditorGUILayout.FloatField("过渡起始(米)", fadeVec.x);
+                            fadeVec.y = EditorGUILayout.FloatField("过渡结束(米)", Mathf.Max(fadeVec.y, fadeVec.x + 0.001f));
+                            fadeVec.z = EditorGUILayout.Slider("过渡柔和度", fadeVec.z, 0.1f, 4f);
+                        }
+
+                        if (EditorGUI.EndChangeCheck())
+                            fadeParams.vectorValue = fadeVec;
+                    },
                     drawEndChangeCheck: (isToggle) =>
                     {
                         if (!isToggle.hasMixedValue)

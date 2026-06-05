@@ -320,8 +320,7 @@
             half clipValue = step(absFragObjectPos.x,0.5);
             clipValue *= step(absFragObjectPos.y,0.5);
             clipValue *= step(absFragObjectPos.z,0.5);
-            half decalAlpha = NB_Remap (abs(fragobjectPos.y),0.1,0.5,1,0);
-        decalAlpha = decalAlpha*decalAlpha;
+            half decalAlpha = ComputeDepthDecalVerticalAlpha(fragobjectPos);
             decalAlpha *= clipValue;
             float2 decalUV = fragobjectPos.xz + 0.5;
         #endif

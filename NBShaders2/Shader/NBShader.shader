@@ -305,6 +305,8 @@ Shader "Hidden/Effects/NBShader2开发中"
 //        _FresnelUnit2("菲涅尔通用2", Vector) = (1,1,0,0)
         
         _DepthDecal_Toggle("深度贴花",Float) = 0
+        [Enum(None,0,Normalized,1,WorldDistance,2)] _DepthDecalFadeMode ("上下过渡模式", Float) = 1
+        _DepthDecalFadeParams ("xy:过渡起止 z:过渡幂", Vector) = (0.1, 0.5, 2, 0)
         
         _VertexOffset_Toggle("顶点偏移",Float) = 0
         _VertexOffset_Map("顶点偏移贴图",2D) = "white"{}
