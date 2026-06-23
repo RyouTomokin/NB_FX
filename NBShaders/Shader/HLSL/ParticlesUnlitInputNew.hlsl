@@ -611,7 +611,7 @@
         aa = (aa+1)*0.5;
         aa = NB_Remap(aa,fresnelPos,1,0,1);
         aa = lerp(aa, (1 - aa), Dire);
-        half Out = pow( aa, Power);
+        half Out = pow(saturate(aa), Power);
         return Out;
     }
 
@@ -643,14 +643,14 @@
         
         );
 
-        return mul(M_RotationZ,mul(M_RotationY,mul(M_RotationX,Dir)));
+        return mul(M_RotationZ,mul(M_RotationY,mul(M_RotationX,Dir))).xyz;
 
     }
 
     //----------------公告板功能-----------------//
     half3 BillBoard(float3 camPos, float3 vertexPos, int billboardType, int _ReverseZ)
     {
-        float3 Z = normalize(mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1)));
+        float3 Z = normalize(mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1.0)).xyz);
         if(_ReverseZ == 1)
         {
             Z *= -1;   
@@ -666,13 +666,13 @@
             X.z, Y.z, Z.z, 0,
             0,0,0,1
             );
-        float3 newPos = mul(M, vertexPos);
+        float3 newPos = mul(M, float4(vertexPos, 1.0)).xyz;
         return newPos;
     }
 
     half3 BillBoardNormal(float3 camPos, float3 vertexPos, int billboardType, int _ReverseZ)
     {
-        float3 Z = normalize(mul(unity_WorldToObject, float4(_WorldSpaceCameraPos,1)));
+        float3 Z = normalize(mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1.0)).xyz);
         if(_ReverseZ == 1)
         {
             Z *= -1;   
@@ -688,7 +688,7 @@
             X.z, Y.z, Z.z, 0,
             0,0,0,1
             );
-        float3 newPos = -mul(M, vertexPos);
+        float3 newPos = -mul(M, float4(vertexPos, 1.0)).xyz;
         return newPos;
     }
 
@@ -779,7 +779,7 @@
             if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_CYLINDER_CORDINATE))
             {
                 float4x4 _CylinderUVMatrix = float4x4(_CylinderMatrix0,_CylinderMatrix1,_CylinderMatrix2,_CylinderMatrix3);
-                postionOS = mul(_CylinderUVMatrix,float4(postionOS,1));
+                postionOS = mul(_CylinderUVMatrix, float4(postionOS, 1.0)).xyz;
                 cylinderUV = CylinderCoordinate(postionOS);
             }
             
@@ -1100,7 +1100,7 @@
         half2 uv = TRANSFORM_TEX(originUV,_VertexOffset_Map);
         uv = UVOffsetAnimaiton(uv,_VertexOffset_Vec.xy);
         // half vertexOffsetSample = tex2Dlod(_VertexOffset_Map,half4(uv,0,0));
-        half vertexOffsetSample = SampleTexture2DWithWrapFlags(_VertexOffset_Map,uv,FLAG_BIT_WRAPMODE_VERTEXOFFSETMAP,true,0);
+        half vertexOffsetSample = SampleTexture2DWithWrapFlags(_VertexOffset_Map,uv,FLAG_BIT_WRAPMODE_VERTEXOFFSETMAP,true,0).r;
         // UNITY_BRANCH
         // if(CheckLocalWrapFlags(FLAG_BIT_WRAPMODE_VERTEXOFFSETMAP))
         // {
@@ -1122,7 +1122,7 @@
         {
             half2 maskUV = TRANSFORM_TEX(originMaskUV,_VertexOffset_MaskMap);
             maskUV = UVOffsetAnimaiton(maskUV,_VertexOffset_MaskMap_Vec.xy);
-            half vertexOffsetMaskSample = SampleTexture2DWithWrapFlags(_VertexOffset_MaskMap,maskUV,FLAG_BIT_WRAPMODE_VERTEXOFFSET_MASKMAP,true,0);
+            half vertexOffsetMaskSample = SampleTexture2DWithWrapFlags(_VertexOffset_MaskMap,maskUV,FLAG_BIT_WRAPMODE_VERTEXOFFSET_MASKMAP,true,0).r;
             vertexOffsetMask = lerp(1,vertexOffsetMaskSample,_VertexOffset_MaskMap_Vec.z);
         }
      
@@ -1273,7 +1273,7 @@
     }
     half2 ParallaxOcclusionMapping(half2 texCoords, half3 viewDir)
     {
-        texCoords = texCoords * _ParallaxMapping_Map_ST + _ParallaxMapping_Map_ST.zw;
+        texCoords = texCoords * _ParallaxMapping_Map_ST.xy + _ParallaxMapping_Map_ST.zw;
         // number of depth layers
         // const float minLayers = 10;
         // const float maxLayers = 10;
@@ -1444,7 +1444,7 @@
         inputData = (InputData)0;
 
     #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
-        inputData.positionWS = input.positionWS;
+        inputData.positionWS = input.positionWS.xyz;
     #endif
     //Normal转到外面执行
     //     half3 viewDirWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
@@ -1645,7 +1645,7 @@
         if (CheckLocalFlags1(FLAG_BIT_PARTICLE_1_MAINTEX_COLOR_REFINE))
         {
             half3 colorA = result.rgb*_BaseMapColorRefine.x;
-            half3 colorB = pow(result.rgb,_BaseMapColorRefine.y)*_BaseMapColorRefine.z;
+            half3 colorB = pow(max(result.rgb, 0), _BaseMapColorRefine.y) * _BaseMapColorRefine.z;
             result.rgb = lerp(colorA,colorB,_BaseMapColorRefine.w);
         }
         

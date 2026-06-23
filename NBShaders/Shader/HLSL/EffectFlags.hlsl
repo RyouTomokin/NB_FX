@@ -271,6 +271,11 @@
         return Out;
     }
 
+    half2 Blend_HardLight(half2 Base, half2 Blend)
+    {
+        return half2(Blend_HardLight(Base.x, Blend.x), Blend_HardLight(Base.y, Blend.y));
+    }
+
     #define FLAG_BIT_PNOISE_BLEND_POS_0_BASE_BLEND (0*3)
     #define FLAG_BIT_PNOISE_BLEND_POS_0_MASK (1*3)
     #define FLAG_BIT_PNOISE_BLEND_POS_0_DISSOLVE (2*3)

@@ -25,9 +25,9 @@
         float4 positionOS = input.vertex;
         // position ws is used to compute eye depth in vertFading
         output.positionWS.xyz = mul(unity_ObjectToWorld, positionOS).xyz;
-        output.positionOS.xyz = positionOS;
+        output.positionOS.xyz = positionOS.xyz;
 
-        output.clipPos = TransformObjectToHClip(positionOS);
+        output.clipPos = TransformObjectToHClip(positionOS.xyz);
         
         #ifdef _PARALLAX_MAPPING
             //视差贴图，需要在Tangent空间下计算。
@@ -37,7 +37,7 @@
                     cross(input.normalOS,input.tangentOS.xyz)  * input.tangentOS.w,//Bitangent
                     input.normalOS
                 );
-            output.tangentViewDir = mul(objectToTangent,GetObjectSpaceNormalizeViewDir(positionOS));
+            output.tangentViewDir = mul(objectToTangent,GetObjectSpaceNormalizeViewDir(positionOS.xyz));
         #endif
         
         float unityFogFactor = ComputeFogFactor(output.clipPos.z);
@@ -88,7 +88,7 @@
         //顶点处理的原则：
         //Twirl和极坐标,贴花处理，在片段着色器层处理UV。
         //BaseMap，遮罩Mask，Noise，高光（自发光） 和极坐标处理相关。
-        BaseUVs baseUVs;
+        BaseUVs baseUVs = (BaseUVs)0;
         if(!isProcessUVInFrag())
         {
 
@@ -104,7 +104,7 @@
             ParticleUVs particleUVs = (ParticleUVs)0;
             float2 screenUV = output.clipPos.xy/output.clipPos.w;
             screenUV = screenUV*0.5+0.5;
-            baseUVs = ProcessBaseUVs(input.texcoords,specialUVInTexcoord3,output.VaryingsP_Custom1,output.VaryingsP_Custom2,output.positionOS.xyz,output.positionWS,screenUV);
+            baseUVs = ProcessBaseUVs(input.texcoords,specialUVInTexcoord3,output.VaryingsP_Custom1,output.VaryingsP_Custom2,output.positionOS.xyz,output.positionWS.xyz,screenUV);
             ParticleProcessUV(particleUVs,input.texcoords,output.VaryingsP_Custom1,output.VaryingsP_Custom2,baseUVs);
             output.texcoord2AndSpecialUV.xy = particleUVs.animBlendUV;
             output.texcoord2AndSpecialUV.zw= particleUVs.specUV;
@@ -141,6 +141,7 @@
         else
         {
             output.texcoord = input.texcoords;
+            output.texcoord2AndSpecialUV = 0;
             #if _FLIPBOOKBLENDING_ON
             if(CheckLocalFlags1(FLAG_BIT_PARTICLE_1_IS_PARTICLE_SYSTEM) & CheckLocalFlags1(FLAG_BIT_PARTICLE_1_USE_TEXCOORD2))
             {
@@ -164,7 +165,7 @@
             {
                 float2 screenUV = output.clipPos.xy/output.clipPos.w;
                 screenUV = screenUV*0.5+0.5;
-                baseUVsForVertexOffset = ProcessBaseUVs(input.texcoords,0,output.VaryingsP_Custom1,output.VaryingsP_Custom2,positionOS,output.positionWS,screenUV);
+                baseUVsForVertexOffset = ProcessBaseUVs(input.texcoords,0,output.VaryingsP_Custom1,output.VaryingsP_Custom2,positionOS.xyz,output.positionWS.xyz,screenUV);
             }
             
             //因为极坐标和旋转会强制到Frag计算，所以顶点在这边特殊处理一遍。
@@ -182,12 +183,12 @@
             float2 vertexOffsetUVs = GetUVByUVMode(_UVModeFlag0,_UVModeFlagType0,FLAG_BIT_UVMODE_POS_0_VERTEX_OFFSET_MAP,baseUVsForVertexOffset);
             float2 vertexOffsetMaskUVs = GetUVByUVMode(_UVModeFlag0,_UVModeFlagType0,FLAG_BIT_UVMODE_POS_0_VERTEX_OFFSET_MASKMAP,baseUVsForVertexOffset);
 
-            positionOS.xyz = VetexOffset(positionOS,vertexOffsetUVs,vertexOffsetMaskUVs,input.normalOS);
+            positionOS.xyz = VetexOffset(positionOS.xyz,vertexOffsetUVs,vertexOffsetMaskUVs,input.normalOS);
 
             //再算一遍
             output.positionWS.xyz = mul(unity_ObjectToWorld, positionOS).xyz;
-            output.positionOS.xyz = positionOS;
-            output.clipPos = TransformObjectToHClip(positionOS);
+            output.positionOS.xyz = positionOS.xyz;
+            output.clipPos = TransformObjectToHClip(positionOS.xyz);
         }
         
         // FXWhip顶点偏移（使用UNITY_BRANCH确保零性能消耗）
@@ -207,8 +208,8 @@
             
             // 更新输出位置
             output.positionWS.xyz = newWorldPos;
-            output.positionOS.xyz = positionOS;
-            output.clipPos = TransformObjectToHClip(positionOS);
+            output.positionOS.xyz = positionOS.xyz;
+            output.clipPos = TransformObjectToHClip(positionOS.xyz);
         }
 
         // _MoveToCamera：透视沿射线改与摄像机距离（>0 靠近），距摄像机不低于 near+0.02；正交沿视前平移。
@@ -236,8 +237,8 @@
 
             positionOS.xyz = mul(unity_WorldToObject, float4(worldPos, 1.0)).xyz;
             output.positionWS.xyz = worldPos;
-            output.positionOS.xyz = positionOS;
-            output.clipPos = TransformObjectToHClip(positionOS);
+            output.positionOS.xyz = positionOS.xyz;
+            output.clipPos = TransformObjectToHClip(positionOS.xyz);
         }
         
         UNITY_BRANCH
@@ -288,7 +289,7 @@
 		half3 positionVS = 0;
 		if(needPositionVS())
 		{
-			positionVS = TransformWorldToView(input.positionWS);
+			positionVS = TransformWorldToView(input.positionWS.xyz);
 		}
 
         if(needEyeDepth())
@@ -725,11 +726,11 @@
             emission = SampleTexture2DWithWrapFlags(_EmissionMap,emission_uv,FLAG_BIT_WRAPMODE_EMISSIONMAP);
             emission.xyz *= emission.a;
             _EmissionMapColor *=  _EmissionMapColorIntensity;
-            emission.xyz *= _EmissionMapColor;
+            emission.xyz *= _EmissionMapColor.rgb;
         
         #endif
         
-        result += emission;
+        result += emission.rgb;
 
 
         #if defined(_COLOR_RAMP)
@@ -777,12 +778,12 @@
         
             if (CheckLocalFlags(FLAG_BIT_PARTICLE_RAMP_COLOR_BLEND_ADD))
             {
-                result += rampColor;
+                result += rampColor.rgb;
                 alpha += rampColor.a;
             }
             else
             {
-                result *= rampColor;
+                result *= rampColor.rgb;
                 alpha *= rampColor.a;
             }
         #endif
@@ -810,7 +811,7 @@
             #endif
         
         
-            dissolveValue = pow(dissolveValue,_Dissolve.y);
+            dissolveValue = pow(saturate(dissolveValue), _Dissolve.y);
 
                
 
@@ -898,7 +899,7 @@
             if (CheckLocalFlags1(FLAG_BIT_PARTICLE_1_DISSOLVE_LINE_MASK))
             {
                 half lineMask = dissolveValueBeforeSoftStep;//SmoothStep要优化
-                lineMask = saturate(NB_Remap01(lineMask,_Dissolve_Vec2.x-_Dissolve_Vec2.y,_Dissolve_Vec2 + _Dissolve_Vec2.y));
+                lineMask = saturate(NB_Remap01(lineMask, _Dissolve_Vec2.x - _Dissolve_Vec2.y, _Dissolve_Vec2.x + _Dissolve_Vec2.y));
                 lineMask = 1- lineMask;
                 
                 result = lerp(result,_DissolveLineColor.rgb,lineMask*_DissolveLineColor.a);
@@ -1027,7 +1028,7 @@
 
             if (CheckLocalFlags1(FLAG_BIT_PARTICLE_1_MASK_REFINE))
             {
-                mask1 = pow(mask1,_MaskRefineVec.x);
+                mask1 = pow(saturate(mask1), _MaskRefineVec.x);
                 mask1 = mask1 * _MaskRefineVec.y;
                 mask1 += _MaskRefineVec.z;
             }
@@ -1066,7 +1067,7 @@
                 {
                     fresnelValue = 1- fresnelValue;
                 }
-                fresnelValue = pow(fresnelValue,_FresnelUnit.y);
+                fresnelValue = pow(saturate(fresnelValue), _FresnelUnit.y);
 
                 
                 // fresnelValue = smoothstep(0.5-fresnelHardness,0.5+fresnelHardness,fresnelValue);
@@ -1192,7 +1193,7 @@
         half screenDistortAlpha = alpha * screenDistort_Noise.z;
         if (CheckLocalFlags1(FLAG_BIT_PARTICLE_1_SCREEN_DISTORT_ALPHA_REFINE))
         {
-            screenDistortAlpha = pow(screenDistortAlpha,_ScreenDistortAlphaPow);
+            screenDistortAlpha = pow(saturate(screenDistortAlpha), _ScreenDistortAlphaPow);
             screenDistortAlpha *= _ScreenDistortAlphaMulti;
             screenDistortAlpha += _ScreenDistortAlphaAdd;
         }

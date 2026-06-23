@@ -156,12 +156,12 @@ LightingData CreateSixWayLightingData(InputData inputData, half3 emission)
 
 void  GetSixWayEmission(inout  BSDFData bsdfData,Texture2D rampMap,half4 emissionColor,bool isRampMap)
 {
-    float input = pow(bsdfData.emissionInput,_SixWayInfo.y);
-    half3 emission =  emissionColor * emissionColor.a;
+    float input = pow(saturate(bsdfData.emissionInput), _SixWayInfo.y);
+    half3 emission = emissionColor.rgb * emissionColor.a;
     if (isRampMap)
     {
         half4 rampSample = rampMap.Sample(sampler_linear_clamp,half2(input,0.5));
-        emission = emission * rampSample * rampSample.a;
+        emission = emission * rampSample.rgb * rampSample.a;
     }
     else
     {
