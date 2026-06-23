@@ -581,9 +581,10 @@ Shader "Effects/NBShader"
         //  Forward pass.
         Pass
         {
+            Name "UniversalForwardOnly"
             Tags
         {
-              "LightMode" = "UniversalForward" 
+              "LightMode" = "UniversalForwardOnly" 
         } //Queue设置是希望特效渲染在场景透明物体前面
             offset [_offsetFactor], [_offsetUnits]
             Cull[_Cull]

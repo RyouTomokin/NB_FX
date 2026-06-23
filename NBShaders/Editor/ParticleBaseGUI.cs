@@ -939,7 +939,7 @@ namespace NBShaderEditor
                                     {
                                         for (int i = 0; i < mats.Count; i++)
                                         {
-                                            mats[i].SetShaderPassEnabled("UniversalForward",disableMainPassToggleProp.floatValue < 0.5f);
+                                            mats[i].SetShaderPassEnabled("UniversalForwardOnly",disableMainPassToggleProp.floatValue < 0.5f);
                                         }
                                     });
                                 _helper.DrawToggleFoldOut(W9ParticleShaderFlags.foldOutBit2ScreenDistortAlphaRefine,5,GetAnimBoolIndex(5),"屏幕扭曲Alpha整体调整","_ScreenDistortAlphaRefineToggle",W9ParticleShaderFlags.FLAG_BIT_PARTICLE_1_SCREEN_DISTORT_ALPHA_REFINE,1,drawBlock:
@@ -965,7 +965,7 @@ namespace NBShaderEditor
                                         mats[i].SetShaderPassEnabled("NBCameraOpaqueDistortPass", false);
                                         mats[i].SetShaderPassEnabled("NBDeferredDistortPass", false);
                                         //打开主材质Pass
-                                        mats[i].SetShaderPassEnabled("UniversalForward",true);
+                                        mats[i].SetShaderPassEnabled("UniversalForwardOnly",true);
                                         if (i == 0) _helper.GetProperty("_DisableMainPassToggle").floatValue = 0;
                                         
                                         break;
